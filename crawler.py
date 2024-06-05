@@ -9,25 +9,26 @@ from elasticsearch import Elasticsearch
 
 #-------------------------------------------------
 #Note: cái này để thêm dữ liệu vào elastic làm vốn
+#This one just to add some e.g to the elastic 
 
 def find_tags(element,tag, objtype, class_name): 
-    # dùng kiếm lời nhạc, tên bài từ web lyrics.vn
+    # we crawl the lyrics fro website: lyrics.vn 
     # param ex: <div class="details"> =>> tag="div", objtype="class", class_name="details"
-    # element là văn bản html, String "class_name" là tên thẻ cần tìm trong các thẻ của văn bản html
-    #tìm kiếm đệ quy, nếu tìm được thì trả về
+    # element is html, String "class_name" is html tag whhich is being found
+    #recursive searching, return if successfully find
     if element.name == tag and class_name in element.get(objtype, []):
         return element
-    # nếu thẻ đang xét có các thẻ con? duyệt từng thẻ con bằng hàm đệ quy
+    # use recursion here 
     for child in element.children:
         if child.name:
             result = find_tags(child,tag,objtype, class_name)
             if result:
                 return result
-    #không thấy 
+    #fail to check
     return None
 
 def find_artist_tag(soup):
-    # kiếm tác giả từ web lyrics.vn
+    # find artist name in lyrics.vn
     h3_tags = soup.find_all('h3', class_='pull-left text-uppercase')
     if h3_tags:
         return h3_tags[0].text.strip().replace("Cùng tác giả ", "")
@@ -35,15 +36,15 @@ def find_artist_tag(soup):
         return None
 
 def crawl_data(url):
-    #cào dữ liệu từ 1 đường link lyric.vn cụ thể
+    #crawl data from a specific link
     data={}
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
-    # phân tích cú pháp dữ liệu html bằng soup (why soup tho ??? who cooking ?)
+    # analyize with  soup (why soup tho ??? who cooking ?)
     songname=find_tags(soup,"h3","class","bold")
     artist=find_artist_tag(soup)
     lyrics = find_tags(soup,"div","class","detail")
-    # tìm thẻ detail trong văn bản html, hãy inspect = f12 để xem cần tìm thẻ nào.
+    # find detail tag in html, use inspect here 
     if songname:
         txt=remove_html_tags2(songname.text)
         data["song_name"]=txt
@@ -66,10 +67,10 @@ def crawl_data(url):
         data["lyrics"]= txt1
     else:
         print("+ lyrics not found.")
-        # không thấy lyrics là cook luôn 
+        # return if cannot find the lyrics
         return
     
-    them_ban_ghi(data) # thêm bản ghi vào elastic
+    them_ban_ghi(data) # add new index 
     
 def clean_and_concatenate_paragraphs(text):
     text = re.sub(r'\t', ' ', text)
@@ -81,10 +82,10 @@ def clean_and_concatenate_paragraphs(text):
 
 def remove_html_tags2(html_tag):
     soup = BeautifulSoup(html_tag, 'html.parser')
-    # Loại bỏ các thẻ <br> và thay thế chúng bằng dấu xuống dòng
+    # remove <br> 
     #for br in soup.find_all('br'):
     #    br.replace_with('\n')
-    # Lấy nội dung của thẻ và loại bỏ các thẻ HTML
+    # get context and remove HTML tags 
     content = soup.get_text(separator=' ', strip=True)
     return content
 
@@ -104,4 +105,4 @@ def them_ban_ghi(record):
     response = es.index(index="songs_index", body=record)
     print(response.get('result'))
 
-read_file_line_by_line("/home/clayzzz/Desktop/CDCS_Tim_Kiem_Bai_Hat_BE/link.txt")# thay bằng đường dẫn tới file chứa các link đẫn tới bài hát.
+read_file_line_by_line("/home/clayzzz/Desktop/CDCS_Tim_Kiem_Bai_Hat_BE/link.txt")# replace with the link to your file containing links t.

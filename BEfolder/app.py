@@ -5,7 +5,8 @@ from elasticsearch import Elasticsearch
 
 app = Flask(__name__)
 
-def them_ban_ghi(record):
+def them_ban_ghi(record):R1>con t
+
     # add a new record to elastic
     es = Elasticsearch("http://localhost:9200") 
     response = es.index(index="songs_index", body=record)
