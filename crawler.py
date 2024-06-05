@@ -104,4 +104,4 @@ def them_ban_ghi(record):
     response = es.index(index="songs_index", body=record)
     print(response.get('result'))
 
-read_file_line_by_line("linklist.txt")# thay bằng đường dẫn tới file chứa các link đẫn tới bài hát.
+read_file_line_by_line("/home/clayzzz/Desktop/CDCS_Tim_Kiem_Bai_Hat_BE/link.txt")# thay bằng đường dẫn tới file chứa các link đẫn tới bài hát.
